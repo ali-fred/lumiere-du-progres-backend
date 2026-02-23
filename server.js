@@ -1,0 +1,36 @@
+const express = require("express");
+const cors = require("cors");
+const mysql = require("mysql2");
+
+const app = express();
+app.use(cors());
+app.use(express.json());
+
+const db = mysql.createConnection({
+  host: "localhost",
+  user: "root",
+  password: "",
+  database: "lumiere"
+});
+
+db.connect(err => {
+  if (err) {
+    console.log("Erreur connexion DB:", err);
+  } else {
+    console.log("Connecté à MariaDB");
+  }
+});
+
+app.get("/balance/:id", (req, res) => {
+  const id = req.params.id;
+  db.query("SELECT tokens FROM users WHERE id = ?", [id], (err, result) => {
+    if (err) return res.send(err);
+    res.send(result);
+  });
+});
+
+const PORT = process.env.PORT || 3000;
+
+app.listen(PORT, () => {
+  console.log("Server iriko irakora kuri port " + PORT);
+});
