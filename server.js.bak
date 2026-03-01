@@ -1,0 +1,102 @@
+const express = require("express");
+const cors = require("cors");
+const sqlite3 = require("sqlite3").verbose();
+const path = require("path");
+
+const app = express();
+const PORT = 3000;
+
+app.use(cors());
+app.use(express.json());
+
+// 👉 Ibi nivyo bituma index.html iva muri public
+app.use(express.static(path.join(__dirname, "public")));
+
+// 👉 Gufungura database
+const db = new sqlite3.Database("database.db", (err) => {
+  if (err) {
+    console.log("❌ Ikosa kuri database:", err.message);
+  } else {
+    console.log("✅ Database irafunguwe neza");
+  }
+});
+
+// 👉 gukora table niba itabaho
+db.run(`
+CREATE TABLE IF NOT EXISTS users (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  username TEXT,
+  balance INTEGER DEFAULT 0
+)
+`);
+
+db.run(`
+CREATE TABLE IF NOT EXISTS transactions (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  user_id INTEGER,
+  amount INTEGER,
+  type TEXT,
+  date TEXT
+)
+`);
+
+// 👉 TEST ROUTE
+app.get("/api", (req, res) => {
+  res.send("API Lumière Du Progrès irakora ✔");
+});
+
+// 👉 GET USERS
+app.get("/users", (req, res) => {
+  db.all("SELECT * FROM users", [], (err, rows) => {
+    if (err) return res.json(err);
+    res.json(rows);
+  });
+});
+
+// 👉 ADD USER
+app.post("/add-user", (req, res) => {
+  const { username } = req.body;
+  db.run(
+    "INSERT INTO users (username, balance) VALUES (?, 0)",
+    [username],
+    function (err) {
+      if (err) return res.json(err);
+      res.json({ message: "User ajouté", id: this.lastID });
+    }
+  );
+});
+
+// 👉 DEPOSIT / WITHDRAW
+app.post("/transaction", (req, res) => {
+  const { user_id, amount, type } = req.body;
+
+  const operation = type === "deposit" ? "+" : "-";
+
+  db.run(
+    `UPDATE users SET balance = balance ${operation} ? WHERE id = ?`,
+    [amount, user_id],
+    function (err) {
+      if (err) return res.json(err);
+
+      db.run(
+        "INSERT INTO transactions (user_id, amount, type, date) VALUES (?, ?, ?, datetime('now'))",
+        [user_id, amount, type]
+      );
+
+      res.json({ message: "Transaction OK" });
+    }
+  );
+});
+
+// 👉 GET TRANSACTIONS
+app.get("/transactions", (req, res) => {
+  db.all("SELECT * FROM transactions", [], (err, rows) => {
+    if (err) return res.json(err);
+    res.json(rows);
+  });
+});
+
+// 👉 START SERVER
+app.listen(PORT, () => {
+  console.log("🚀 Server iriko irakora kuri port " + PORT);
+});

@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lumière Du Progrès</title>
+<link rel="manifest" href="manifest.json">
+<link rel="stylesheet" href="style.css">
+<script>
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('service-worker.js')
+      .then(() => console.log("Service Worker irakora!"))
+      .catch(err => console.log("Service Worker error:", err));
+  }
+</script>
+</head>
+<body>
+
+<h1>💡 Lumière Du Progrès</h1>
+
+<section>
+  <h2>Create User</h2>
+  <input type="text" id="username" placeholder="Username">
+  <button onclick="createUser()">Create User</button>
+</section>
+
+<section>
+  <h2>Users</h2>
+  <ul id="usersList"></ul>
+</section>
+
+<section>
+  <h2>Deposit / Withdraw</h2>
+  <select id="userSelect"></select>
+  <input type="number" id="amount" placeholder="Amount">
+  <button onclick="deposit()">Deposit</button>
+  <button onclick="withdraw()">Withdraw</button>
+</section>
+
+<script src="app.js"></script>
+</body>
+</html>

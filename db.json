@@ -1,0 +1,24 @@
+{
+  "users": [
+    {
+      "id": "OdSULi1qUugHuBgXaBZ_q",
+      "username": "Alfred",
+      "balance": 300
+    },
+    {
+      "id": "FBwOuHnEAmyvfPyLjXcFA",
+      "username": "Alfred",
+      "balance": 0
+    },
+    {
+      "id": "74wIO3zGCLYytIUW7hlVB",
+      "username": "Alfred",
+      "balance": 500
+    },
+    {
+      "id": "wJJjBIqFPJJTxBtYlZBiR",
+      "username": "Tidami",
+      "balance": 1000
+    }
+  ]
+}

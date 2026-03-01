@@ -1,0 +1,26 @@
+kkk  if (!user) return res.status(404).json({ message: "User ntabonetse" });
+
+  user.balance += amount;
+  db.write();
+  res.json({ message: "Amafaranga yongewe", user });
+});
+
+app.post("/withdraw", (req, res) => {
+  const { id, amount } = req.body;
+  if (!id || typeof amount !== "number")
+    return res.status(400).json({ message: "Shiramwo id na amount" });
+
+  db.read();
+  const user = db.data.users.find(u => u.id === id);
+  if (!user) return res.status(404).json({ message: "User ntabonetse" });
+  if (user.balance < amount)
+    return res.status(400).json({ message: "Amafaranga ntahagije" });
+
+  user.balance -= amount;
+  db.write();
+  res.json({ message: "Amafaranga yakuwemo", user });
+});
+
+// Start server
+const PORT = 3000;
+app.listen(PORT, () => console.log(`🚀 Server irakora kuri port ${PORT}`));

@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lumière Du Progrès</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#0d6efd">
+</head>
+<body>
+  <h1>App Lumière Du Progrès</h1>
+
+  <section id="users">
+    <h2>Raba Users</h2>
+    <ul id="user-list"></ul>
+  </section>
+
+  <section id="add-user">
+    <h2>Add User</h2>
+    <input type="text" id="username" placeholder="Username">
+    <input type="number" id="balance" placeholder="Balance">
+    <button onclick="addUser()">Add</button>
+  </section>
+
+  <section id="deposit-withdraw">
+    <h2>Deposit / Withdraw</h2>
+    <input type="number" id="userId" placeholder="User ID">
+    <input type="number" id="amount" placeholder="Amount">
+    <button onclick="deposit()">Deposit</button>
+    <button onclick="withdraw()">Withdraw</button>
+  </section>
+
+  <section id="transactions">
+    <h2>Transactions</h2>
+    <ul id="tx-list"></ul>
+  </section>
+
+  <script src="app.js"></script>
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/service-worker.js')
+          .then(reg => console.log('Service Worker registered', reg.scope))
+          .catch(err => console.log('Service Worker failed', err));
+      });
+    }
+  </script>
+</body>
+</html>
