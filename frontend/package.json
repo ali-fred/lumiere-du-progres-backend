@@ -1,7 +1,6 @@
 {
-  "name": "lumiere-du-progres-backend",
+  "name": "lumiere-backend",
   "version": "1.0.0",
-  "description": "Backend Lumiere Du Progres",
   "main": "server.js",
   "type": "commonjs",
   "scripts": {
@@ -10,7 +9,7 @@
   "dependencies": {
     "cors": "^2.8.5",
     "express": "^4.18.2",
-    "lowdb": "1.0.0",
+    "lowdb": "^1.0.0",
     "nanoid": "^3.3.7"
   }
 }
