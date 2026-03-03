@@ -1,88 +1,72 @@
-const express = require("express");
-const cors = require("cors");
-const sqlite3 = require("sqlite3").verbose();
+import express from "express";
+import cors from "cors";
+import bodyParser from "body-parser";
+import { v4 as uuidv4 } from "uuid";
+import fs from "fs";
 
 const app = express();
+const PORT = process.env.PORT || 10000;
+const DATABASE_FILE = "./database.json";
+
+// Middleware
 app.use(cors());
-app.use(express.json());
+app.use(bodyParser.json());
 
-// --- DATABASE ---
-const db = new sqlite3.Database("database.db", (err) => {
-  if (err) {
-    console.error("Erreur DB:", err.message);
-  } else {
-    console.log("Database connecté ✔");
-
-    db.run(`
-      CREATE TABLE IF NOT EXISTS users (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        username TEXT UNIQUE,
-        balance INTEGER DEFAULT 0
-      )
-    `);
+// Functions zo gusoma no kwandika database
+function readDatabase() {
+  try {
+    const data = fs.readFileSync(DATABASE_FILE, "utf8");
+    return JSON.parse(data);
+  } catch {
+    return { users: [] };
   }
-});
+}
 
-// --- HOME ---
+function writeDatabase(data) {
+  fs.writeFileSync(DATABASE_FILE, JSON.stringify(data, null, 2));
+}
+
+// Routes
 app.get("/", (req, res) => {
-  res.send("API Lumière Du Progrès irakora ✔");
+  res.send("🚀 Lumière Du Progrès API irakora neza");
 });
 
-// --- CREATE USER ---
-app.get("/create-user", (req, res) => {
-  const username = req.query.username;
-
-  if (!username) {
-    return res.json({ error: "username irakenewe" });
-  }
-
-  const sql = "INSERT INTO users (username, balance) VALUES (?, 0)";
-  db.run(sql, [username], function (err) {
-    if (err) {
-      return res.json({ error: err.message });
-    }
-    res.json({ message: "User created", id: this.lastID });
-  });
-});
-
-// --- LIST USERS ---
+// Route yo kubona users
 app.get("/users", (req, res) => {
-  db.all("SELECT * FROM users", [], (err, rows) => {
-    if (err) return res.json({ error: err.message });
-    res.json(rows);
-  });
+  const db = readDatabase();
+  res.json(db.users);
 });
 
-// --- GET BALANCE ---
-app.get("/balance/:id", (req, res) => {
-  const id = req.params.id;
+// Route yo gukora user nshya
+app.post("/create-user", (req, res) => {
+  const { username } = req.body;
+  if (!username) return res.status(400).json({ error: "Username required" });
 
-  db.get("SELECT balance FROM users WHERE id = ?", [id], (err, row) => {
-    if (err) return res.json({ error: err.message });
-    if (!row) return res.json({ error: "User ntibaho" });
-
-    res.json({ balance: row.balance });
-  });
+  const db = readDatabase();
+  const newUser = { id: uuidv4(), username, balance: 0 };
+  db.users.push(newUser);
+  writeDatabase(db);
+  res.json(newUser);
 });
 
-// --- DEPOSIT TOKENS ---
-app.get("/deposit", (req, res) => {
-  const id = req.query.id;
-  const amount = parseInt(req.query.amount || "0", 10);
-
-  if (!id || !amount) {
-    return res.json({ error: "id na amount birakenewe" });
+// Route yo gukora dépôt / retrait
+app.post("/transaction", (req, res) => {
+  const { username, amount } = req.body;
+  if (!username || typeof amount !== "number") {
+    return res.status(400).json({ error: "Username and amount required" });
   }
 
-  const sql = "UPDATE users SET balance = balance + ? WHERE id = ?";
-  db.run(sql, [amount, id], function (err) {
-    if (err) return res.json({ error: err.message });
-    res.json({ message: "Deposit yakozwe ✔" });
-  });
+  const db = readDatabase();
+  const user = db.users.find(u => u.username === username);
+  if (!user) return res.status(404).json({ error: "User not found" });
+
+  user.balance += amount;
+  writeDatabase(db);
+
+  res.json({ username: user.username, balance: user.balance });
 });
 
-// --- START SERVER ---
-const PORT = process.env.PORT || 3000;
+// Start server
 app.listen(PORT, () => {
-  console.log("Server iri ku port " + PORT);
+  console.log(`🚀 Server running on port ${PORT}`);
 });

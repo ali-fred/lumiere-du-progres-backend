@@ -1,3 +1,14 @@
 {
-  "users": []
+  "users": [
+    {
+      "id": "f1720dcc-7add-4552-b26c-c20aa2a257de",
+      "username": "Alfred",
+      "balance": 100
+    },
+    {
+      "id": "6986ce47-3eb4-4df9-ae89-f143583903b3",
+      "username": "Alfred",
+      "balance": 0
+    }
+  ]
 }

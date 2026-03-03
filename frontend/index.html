@@ -1,42 +1,108 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Lumière Du Progrès</title>
-<link rel="manifest" href="manifest.json">
-<link rel="stylesheet" href="style.css">
-<script>
-  if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('service-worker.js')
-      .then(() => console.log("Service Worker irakora!"))
-      .catch(err => console.log("Service Worker error:", err));
-  }
-</script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lumière Du Progrès</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 20px; background: #f0f0f0; }
+    h1 { color: #333; }
+    input, button { padding: 8px; margin: 4px; }
+    table { border-collapse: collapse; width: 100%; margin-top: 20px; }
+    th, td { border: 1px solid #999; padding: 8px; text-align: center; }
+    th { background: #ddd; }
+    .section { background: #fff; padding: 20px; margin-bottom: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);}
+  </style>
 </head>
 <body>
 
-<h1>💡 Lumière Du Progrès</h1>
+  <h1>Lumière Du Progrès</h1>
 
-<section>
-  <h2>Create User</h2>
-  <input type="text" id="username" placeholder="Username">
-  <button onclick="createUser()">Create User</button>
-</section>
+  <div class="section">
+    <h2>Create User</h2>
+    <input type="text" id="newUsername" placeholder="Username">
+    <button id="createUserBtn">Create User</button>
+  </div>
 
-<section>
-  <h2>Users</h2>
-  <ul id="usersList"></ul>
-</section>
+  <div class="section">
+    <h2>Deposit / Withdraw</h2>
+    <input type="text" id="userForTxn" placeholder="Username">
+    <input type="number" id="amount" placeholder="Amount">
+    <button id="depositBtn">Deposit</button>
+    <button id="withdrawBtn">Withdraw</button>
+  </div>
 
-<section>
-  <h2>Deposit / Withdraw</h2>
-  <select id="userSelect"></select>
-  <input type="number" id="amount" placeholder="Amount">
-  <button onclick="deposit()">Deposit</button>
-  <button onclick="withdraw()">Withdraw</button>
-</section>
+  <div class="section">
+    <h2>Users</h2>
+    <button id="refreshBtn">Refresh Users</button>
+    <table>
+      <thead>
+        <tr><th>ID</th><th>Username</th><th>Balance</th></tr>
+      </thead>
+      <tbody id="usersTable"></tbody>
+    </table>
+  </div>
 
-<script src="app.js"></script>
+<script>
+const API_URL = "https://lumiereduprogres-backend.onrender.com";
+
+// Functions
+async function fetchUsers() {
+  try {
+    const res = await fetch(`${API_URL}/users`);
+    const users = await res.json();
+    const tbody = document.getElementById("usersTable");
+    tbody.innerHTML = "";
+    users.forEach(u => {
+      const tr = document.createElement("tr");
+      tr.innerHTML = `<td>${u.id}</td><td>${u.username}</td><td>${u.balance}</td>`;
+      tbody.appendChild(tr);
+    });
+  } catch (err) {
+    alert("Error fetching users: " + err);
+  }
+}
+
+async function createUser() {
+  const username = document.getElementById("newUsername").value.trim();
+  if(!username) return alert("Enter a username");
+  try {
+    const res = await fetch(`${API_URL}/create-user`, {
+      method: "POST",
+      headers: {"Content-Type":"application/json"},
+      body: JSON.stringify({ username })
+    });
+    const data = await res.json();
+    alert(data.message || "User created!");
+    fetchUsers();
+  } catch(err) { alert("Error: "+err); }
+}
+
+async function depositWithdraw(action) {
+  const username = document.getElementById("userForTxn").value.trim();
+  const amount = parseFloat(document.getElementById("amount").value);
+  if(!username || isNaN(amount)) return alert("Enter username and valid amount");
+  try {
+    const res = await fetch(`${API_URL}/${action}`, {
+      method: "POST",
+      headers: {"Content-Type":"application/json"},
+      body: JSON.stringify({ username, amount })
+    });
+    const data = await res.json();
+    alert(data.message || `${action} done`);
+    fetchUsers();
+  } catch(err) { alert("Error: "+err); }
+}
+
+// Event listeners
+document.getElementById("createUserBtn").addEventListener("click", createUser);
+document.getElementById("depositBtn").addEventListener("click", ()=> depositWithdraw("deposit"));
+document.getElementById("withdrawBtn").addEventListener("click", ()=> depositWithdraw("withdraw"));
+document.getElementById("refreshBtn").addEventListener("click", fetchUsers);
+
+// Initial load
+fetchUsers();
+</script>
+
 </body>
 </html>
