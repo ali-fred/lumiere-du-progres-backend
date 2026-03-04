@@ -7,18 +7,24 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
+// Database setup
 const adapter = new JSONFile("db.json");
 const db = new Low(adapter);
 
 await db.read();
 db.data ||= { users: [] };
 
-// GET users
+// Home route
+app.get("/", (req, res) => {
+  res.json({ message: "Lumière Du Progrès API running" });
+});
+
+// Get users
 app.get("/users", (req, res) => {
   res.json(db.data.users);
 });
 
-// CREATE USER
+// Create user
 app.post("/create-user", async (req, res) => {
   const { username } = req.body;
 
@@ -32,7 +38,7 @@ app.post("/create-user", async (req, res) => {
   }
 
   const newUser = {
-    id: Date.now(),
+    id: crypto.randomUUID(),
     username,
     balance: 0
   };
@@ -43,9 +49,13 @@ app.post("/create-user", async (req, res) => {
   res.json(newUser);
 });
 
-// DEPOSIT
+// Deposit
 app.post("/deposit", async (req, res) => {
   const { username, amount } = req.body;
+
+  if (!username || !amount) {
+    return res.status(400).json({ error: "Missing data" });
+  }
 
   const user = db.data.users.find(u => u.username === username);
   if (!user) {
@@ -55,12 +65,16 @@ app.post("/deposit", async (req, res) => {
   user.balance += Number(amount);
   await db.write();
 
-  res.json({ message: "Deposit successful", user });
+  res.json({ success: true, balance: user.balance });
 });
 
-// WITHDRAW
+// Withdraw
 app.post("/withdraw", async (req, res) => {
   const { username, amount } = req.body;
+
+  if (!username || !amount) {
+    return res.status(400).json({ error: "Missing data" });
+  }
 
   const user = db.data.users.find(u => u.username === username);
   if (!user) {
@@ -74,10 +88,11 @@ app.post("/withdraw", async (req, res) => {
   user.balance -= Number(amount);
   await db.write();
 
-  res.json({ message: "Withdraw successful", user });
+  res.json({ success: true, balance: user.balance });
 });
 
 const PORT = process.env.PORT || 3000;
+
 app.listen(PORT, () => {
-  console.log(`🚀 Server running on port ${PORT}`);
+  console.log("Server running on port " + PORT);
 });
