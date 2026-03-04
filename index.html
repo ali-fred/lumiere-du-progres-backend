@@ -1,122 +1,159 @@
-<!DOCTYPE html>
-<html>
+k<!DOCTYPE html>
+<html lang="en">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Lumière Du Progrès</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 20px; }
+    .card { padding: 20px; margin-bottom: 20px; border: 1px solid #ccc; border-radius: 10px; max-width: 400px; }
+    input { padding: 5px; margin-right: 10px; width: 150px; }
+    button { padding: 5px 10px; }
+    table { border-collapse: collapse; width: 100%; max-width: 600px; }
+    th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
+    th { background-color: #f2f2f2; }
+  </style>
 </head>
 <body>
 
 <h1>Lumière Du Progrès</h1>
 
-<h2>Create User</h2>
-<input type="text" id="newUsername" placeholder="Username">
-<button onclick="createUser()">Create</button>
+<div class="card">
+  <h2>Create User</h2>
+  <input type="text" id="new-username" placeholder="Username">
+  <button onclick="createUser()">Create User</button>
+</div>
 
-<h2>Deposit / Withdraw</h2>
-<input type="text" id="username" placeholder="Username">
-<input type="number" id="amount" placeholder="Amount">
-<button onclick="deposit()">Deposit</button>
-<button onclick="withdraw()">Withdraw</button>
+<div class="card">
+  <h2>Deposit / Withdraw</h2>
+  <input type="text" id="username" placeholder="Username">
+  <input type="number" id="amount" placeholder="Amount">
+  <button onclick="deposit()">Deposit</button>
+  <button onclick="withdraw()">Withdraw</button>
+</div>
 
-<h2>Users</h2>
-<table border="1">
-  <thead>
-    <tr>
-      <th>ID</th>
-      <th>Username</th>
-      <th>Balance</th>
-    </tr>
-  </thead>
-  <tbody id="usersTable"></tbody>
-</table>
+<div class="card">
+  <h2>Users</h2>
+  <button onclick="fetchUsers()">Refresh Users</button>
+  <table>
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>Username</th>
+        <th>Balance</th>
+      </tr>
+    </thead>
+    <tbody id="users-table-body">
+      <!-- Users will appear here -->
+    </tbody>
+  </table>
+</div>
 
 <script>
-const API_URL = "https://ldp-backend-ltrm.onrender.com";
+const API_URL = "https://ldp-backend-ltrm.onrender.com"; // Backend URL yawe
 
-// Load users
+// --- Fetch users ---
 async function fetchUsers() {
-  const res = await fetch(`${API_URL}/users`);
-  const users = await res.json();
-
-  const table = document.getElementById("usersTable");
-  table.innerHTML = "";
-
-  users.forEach(user => {
-    table.innerHTML += `
-      <tr>
-        <td>${user.id}</td>
-        <td>${user.username}</td>
-        <td>${user.balance}</td>
-      </tr>
-    `;
-  });
+  try {
+    const res = await fetch(`${API_URL}/users`);
+    const data = await res.json();
+    const tbody = document.getElementById("users-table-body");
+    tbody.innerHTML = "";
+    data.forEach(user => {
+      const row = document.createElement("tr");
+      row.innerHTML = `<td>${user.id}</td><td>${user.username}</td><td>${user.balance}</td>`;
+      tbody.appendChild(row);
+    });
+  } catch (e) {
+    alert("Failed to fetch users");
+    console.log(e);
+  }
 }
 
-// Create user
+// --- Create User ---
 async function createUser() {
-  const username = document.getElementById("newUsername").value;
-
-  const res = await fetch(`${API_URL}/create-user`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ username })
-  });
-
-  const data = await res.json();
-
-  if (!res.ok) {
-    alert(data.error);
-    return;
+  const username = document.getElementById("new-username").value.trim();
+  if (!username) return alert("Enter a username");
+  try {
+    const res = await fetch(`${API_URL}/users`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ username })
+    });
+    const text = await res.text();
+    try {
+      const data = JSON.parse(text);
+      if (!res.ok) return alert(data.error || "Failed to create user");
+      alert("User created!");
+      fetchUsers();
+      document.getElementById("new-username").value = "";
+    } catch {
+      alert("Server did not return JSON");
+      console.log(text);
+    }
+  } catch (e) {
+    alert("Network error");
+    console.log(e);
   }
-
-  alert("User created");
-  fetchUsers();
 }
 
-// Deposit
+// --- Deposit ---
 async function deposit() {
-  const username = document.getElementById("username").value;
+  const username = document.getElementById("username").value.trim();
   const amount = Number(document.getElementById("amount").value);
-
-  const res = await fetch(`${API_URL}/deposit`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ username, amount })
-  });
-
-  const data = await res.json();
-
-  if (!res.ok) {
-    alert(data.error);
-    return;
+  if (!username || !amount) return alert("Enter username and amount");
+  try {
+    const res = await fetch(`${API_URL}/deposit`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ username, amount })
+    });
+    const text = await res.text();
+    try {
+      const data = JSON.parse(text);
+      if (!res.ok) return alert(data.error || "Deposit failed");
+      alert("Deposit successful");
+      fetchUsers();
+      document.getElementById("amount").value = "";
+    } catch {
+      alert("Server did not return JSON");
+      console.log(text);
+    }
+  } catch (e) {
+    alert("Network error");
+    console.log(e);
   }
-
-  alert("Deposit successful");
-  fetchUsers();
 }
 
-// Withdraw
+// --- Withdraw ---
 async function withdraw() {
-  const username = document.getElementById("username").value;
+  const username = document.getElementById("username").value.trim();
   const amount = Number(document.getElementById("amount").value);
-
-  const res = await fetch(`${API_URL}/withdraw`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ username, amount })
-  });
-
-  const data = await res.json();
-
-  if (!res.ok) {
-    alert(data.error);
-    return;
+  if (!username || !amount) return alert("Enter username and amount");
+  try {
+    const res = await fetch(`${API_URL}/withdraw`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ username, amount })
+    });
+    const text = await res.text();
+    try {
+      const data = JSON.parse(text);
+      if (!res.ok) return alert(data.error || "Withdraw failed");
+      alert("Withdraw successful");
+      fetchUsers();
+      document.getElementById("amount").value = "";
+    } catch {
+      alert("Server did not return JSON");
+      console.log(text);
+    }
+  } catch (e) {
+    alert("Network error");
+    console.log(e);
   }
-
-  alert("Withdraw successful");
-  fetchUsers();
 }
 
+// --- Load users on start ---
 fetchUsers();
 </script>
 
