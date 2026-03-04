@@ -1,28 +1,124 @@
 <!DOCTYPE html>
-<html lang="fr">
+<html>
 <head>
   <meta charset="UTF-8">
   <title>Lumière Du Progrès</title>
-  <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <h1>App Lumière Du Progrès</h1>
 
-  <section>
-    <h2>Raba Users</h2>
-    <button onclick="loadUsers()">Refresh Users</button>
-    <table id="usersTable">
-      <thead>
-        <tr>
-          <th>ID</th>
-          <th>Username</th>
-          <th>Balance</th>
-        </tr>
-      </thead>
-      <tbody></tbody>
-    </table>
-  </section>
+<h1>Lumière Du Progrès</h1>
 
-  <script src="app.js"></script>
+<h2>Create User</h2>
+<input type="text" id="newUsername" placeholder="Username">
+<button onclick="createUser()">Create</button>
+
+<h2>Deposit / Withdraw</h2>
+<input type="text" id="username" placeholder="Username">
+<input type="number" id="amount" placeholder="Amount">
+<button onclick="deposit()">Deposit</button>
+<button onclick="withdraw()">Withdraw</button>
+
+<h2>Users</h2>
+<table border="1">
+  <thead>
+    <tr>
+      <th>ID</th>
+      <th>Username</th>
+      <th>Balance</th>
+    </tr>
+  </thead>
+  <tbody id="usersTable"></tbody>
+</table>
+
+<script>
+const API_URL = "https://ldp-backend-ltrm.onrender.com";
+
+// Load users
+async function fetchUsers() {
+  const res = await fetch(`${API_URL}/users`);
+  const users = await res.json();
+
+  const table = document.getElementById("usersTable");
+  table.innerHTML = "";
+
+  users.forEach(user => {
+    table.innerHTML += `
+      <tr>
+        <td>${user.id}</td>
+        <td>${user.username}</td>
+        <td>${user.balance}</td>
+      </tr>
+    `;
+  });
+}
+
+// Create user
+async function createUser() {
+  const username = document.getElementById("newUsername").value;
+
+  const res = await fetch(`${API_URL}/create-user`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ username })
+  });
+
+  const data = await res.json();
+
+  if (!res.ok) {
+    alert(data.error);
+    return;
+  }
+
+  alert("User created");
+  fetchUsers();
+}
+
+// Deposit
+async function deposit() {
+  const username = document.getElementById("username").value;
+  const amount = Number(document.getElementById("amount").value);
+
+  const res = await fetch(`${API_URL}/deposit`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ username, amount })
+  });
+
+  const data = await res.json();
+
+  if (!res.ok) {
+    alert(data.error);
+    return;
+  }
+
+  alert("Deposit successful");
+  fetchUsers();
+}
+
+// Withdraw
+async function withdraw() {
+  const username = document.getElementById("username").value;
+  const amount = Number(document.getElementById("amount").value);
+
+  const res = await fetch(`${API_URL}/withdraw`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ username, amount })
+  });
+
+  const data = await res.json();
+
+  if (!res.ok) {
+    alert(data.error);
+    return;
+  }
+
+  alert("Withdraw successful");
+  fetchUsers();
+}
+
+fetchUsers();
+</script>
+
 </body>
 </html>
